@@ -1,6 +1,11 @@
-import pandas as pd 
-from sklearn.preprocessing import LabelEncoder
 from collections import defaultdict
+
+import pandas as pd
+from sklearn import tree
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import LabelEncoder
 
 # Import formated data
 df_products= pd.read_csv('/Users/thomasseagrave/Google Drive/Documents/Code/multiPogAI/data/allProducts.csv', index_col='UPC')
@@ -12,44 +17,37 @@ d = defaultdict(LabelEncoder)
 # Encoding the variables in data to integer values
 df_products_encoded = df_products.apply(lambda x: d[x.name].fit_transform(x))
 
-# Inverse the encoded
-#df_fit.apply(lambda x: d[x.name].inverse_transform(x))
-
-# Using the dictionary to label future data
-#df.apply(lambda x: d[x.name].transform(x))
-
-
+# Import the training data, products on the current planograms
 df_train = pd.read_csv('/Users/thomasseagrave/Google Drive/Documents/Code/multiPogAI/data/trainingData.csv', index_col='UPC')
+# Use the dictionary to convert string values into ints
 df_train_encoded = df_train.apply(lambda x: d[x.name].transform(x))
 
+# Split the training data into values (x) and results (y)
 x = df_train_encoded[df_train_encoded.columns.drop('Planogram')]
 y = df_train_encoded['Planogram']
 
-from sklearn.model_selection import train_test_split
+# First we'll split the data and run some testing to see the accuracy
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=.5)
 
-from sklearn import tree
-my_classifier = tree.DecisionTreeClassifier()
+# Create test classifier and train it with split training data
+testClassifier = tree.DecisionTreeClassifier()
+testClassifier.fit(x_train, y_train)
+testPredictions = testClassifier.predict(x_test)
 
-my_classifier.fit(x_train, y_train)
+print("Accuracy from testing",accuracy_score(y_test, testPredictions),"%")
 
-testPredictions = my_classifier.predict(x_test)
+# Create new classifier using all the data to train it
+classifier = tree.DecisionTreeClassifier()
+classifier.fit(x,y)
 
-from sklearn.metrics import accuracy_score
-print(accuracy_score(y_test, testPredictions))
-
-
+# Load products without a planograms, and convert text using dictionary
 df_test = pd.read_csv('/Users/thomasseagrave/Google Drive/Documents/Code/multiPogAI/data/testingData.csv', index_col='UPC')
 df_test_fit = df_test.apply(lambda x: d[x.name].transform(x))
 
-# Predict returns a numpy array
-df_predictions_encoded = pd.DataFrame(my_classifier.predict(df_test_fit), columns=['Planogram'])
+# Predict returns a numpy array, convert to data frame using index from test data
+df_predictions_encoded = pd.DataFrame(classifier.predict(df_test_fit), columns=['Planogram'], index=df_test_fit.index)
+# Use the dictionary to revert the transform from int back to string
 df_predictions = df_predictions_encoded.apply(lambda x: d[x.name].inverse_transform(x))
 
-df_test['Planogram'] = df_predictions['Planogram']
-df_test.Planogram = df_test.Planogram.astype(float)
-df_test.to_csv('/Users/thomasseagrave/Google Drive/Documents/Code/multiPogAI/data/results.csv', sep=',')
-
-
-
-
+# Export results to CSV
+df_predictions.to_csv('/Users/thomasseagrave/Google Drive/Documents/Code/multiPogAI/data/results.csv', sep=',')
