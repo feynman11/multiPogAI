@@ -51,3 +51,10 @@ df_predictions = df_predictions_encoded.apply(lambda x: d[x.name].inverse_transf
 
 # Export results to CSV
 df_predictions.to_csv('/Users/thomasseagrave/Google Drive/Documents/Code/multiPogAI/data/results.csv', sep=',')
+
+# Check the UPCs in results that we have planogram information for
+df_predictions_test = pd.merge(df_train['Planogram'].to_frame().rename(columns = {'Planogram':'SourcePlanogram'}), df_predictions, left_index=True, right_index=True)
+
+#df_predictions_test.to_csv('/Users/thomasseagrave/Google Drive/Documents/Code/multiPogAI/data/resultsTest.csv', sep=',')
+
+#UPCs in the source and results now stores in df_predictions_test loop over and work out % correct
