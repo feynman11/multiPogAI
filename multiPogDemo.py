@@ -58,3 +58,11 @@ df_predictions_test = pd.merge(df_train['Planogram'].to_frame().rename(columns =
 #df_predictions_test.to_csv('/Users/thomasseagrave/Google Drive/Documents/Code/multiPogAI/data/resultsTest.csv', sep=',')
 
 #UPCs in the source and results now stores in df_predictions_test loop over and work out % correct
+totalCount = 0
+correctCount = 0
+for index, row in df_predictions_test.iterrows():
+    totalCount += 1
+    if(row['SourcePlanogram'] == row['Planogram']):
+        correctCount +=1
+    
+print("Accuracy from Source to Results is ", correctCount/totalCount*100)
