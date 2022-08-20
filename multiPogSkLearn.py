@@ -9,8 +9,7 @@ from sklearn.preprocessing import LabelEncoder
 
 # Currently we import a formated product list that only includes columns for the classifier to consider
 # We need to change this so that the program can determine which columns to use
-df_products_complete = pd.read_csv(
-    '/Users/thomasseagrave/Google Drive/Documents/Code/multiPogAI/data/completeProductData.csv', index_col='UPC')
+df_products_complete = pd.read_csv('data/completeProductData.csv', index_col='UPC')
 
 # Get the number of products from the dataframe, need this to compare against number of distinct values
 productCount = df_products_complete.shape[0]
@@ -18,7 +17,7 @@ productCount = df_products_complete.shape[0]
 # The aim is to convert df_products_complete so that is matches df_products, for this we need to scan all the columns and count unique values
 for column in df_products_complete:
     columnCount = df_products_complete[column].unique().size
-    print("The cound of unique values in column ", column, " is ", columnCount)
+    print("The count of unique values in column ", column, " is ", columnCount)
     if not (1 < columnCount < productCount*0.5):
         print("Dropping column ", column)
         df_products_complete.drop(column, 1, inplace=True)
@@ -27,9 +26,9 @@ for column in df_products_complete:
     print(column)
 
  # Import formated data
-#df_products = pd.read_csv('/Users/thomasseagrave/Google Drive/Documents/Code/multiPogAI/data/allProducts.csv', index_col='UPC')
+#df_products = pd.read_csv('data/allProducts.csv', index_col='UPC')
 df_products = df_products_complete
-# df = pd.read_csv('F:\Google Drive\Documents\Code\multiPogAI\data\data.csv', index_col='UPC')
+# df = pd.read_csv('data\data.csv', index_col='UPC')
 
 # Create dictionary to store encoding
 d = defaultdict(LabelEncoder)
@@ -38,8 +37,7 @@ d = defaultdict(LabelEncoder)
 df_products_encoded = df_products.apply(lambda x: d[x.name].fit_transform(x))
 
 # Import the training data, products on the current planograms
-df_train = pd.read_csv(
-    '/Users/thomasseagrave/Google Drive/Documents/Code/multiPogAI/data/trainingData.csv', index_col='UPC')
+df_train = pd.read_csv('data/trainingData.csv', index_col='UPC')
 # Use the dictionary to convert string values into ints
 df_train_encoded = df_train.apply(lambda x: d[x.name].transform(x))
 
@@ -62,8 +60,7 @@ classifier = tree.DecisionTreeClassifier()
 classifier.fit(x, y)
 
 # Load products without a planograms, and convert text using dictionary
-df_test = pd.read_csv(
-    '/Users/thomasseagrave/Google Drive/Documents/Code/multiPogAI/data/testingData.csv', index_col='UPC')
+df_test = pd.read_csv('data/testingData.csv', index_col='UPC')
 df_test_fit = df_test.apply(lambda x: d[x.name].transform(x))
 
 # Predict returns a numpy array, convert to data frame using index from test data
@@ -74,14 +71,12 @@ df_predictions = df_predictions_encoded.apply(
     lambda x: d[x.name].inverse_transform(x))
 
 # Export results to CSV
-df_predictions.to_csv(
-    '/Users/thomasseagrave/Google Drive/Documents/Code/multiPogAI/data/results.csv', sep=',')
+df_predictions.to_csv('data/results.csv', sep=',')
 
 # Check the UPCs in results that we have planogram information for
-df_predictions_test = pd.merge(df_train['Planogram'].to_frame().rename(columns={
-    'Planogram': 'SourcePlanogram'}), df_predictions, left_index=True, right_index=True)
+df_predictions_test = pd.merge(df_train['Planogram'].to_frame().rename(columns={'Planogram': 'SourcePlanogram'}), df_predictions, left_index=True, right_index=True)
 
-#df_predictions_test.to_csv('/Users/thomasseagrave/Google Drive/Documents/Code/multiPogAI/data/resultsTest.csv', sep=',')
+df_predictions_test.to_csv('data/resultsTest.csv', sep=',')
 
 # UPCs in the source and results now stores in df_predictions_test loop over and work out % correct
 totalCount = 0
