@@ -1,4 +1,5 @@
 from collections import defaultdict
+import logging
 
 import pandas as pd
 from sklearn import tree
@@ -6,6 +7,8 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import LabelEncoder
+
+logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
 
 # Currently we import a formated product list that only includes columns for the classifier to consider
 # We need to change this so that the program can determine which columns to use
@@ -16,14 +19,14 @@ productCount = df_products_complete.shape[0]
 
 # The aim is to convert df_products_complete so that is matches df_products, for this we need to scan all the columns and count unique values
 for column in df_products_complete:
-    columnCount = df_products_complete[column].unique().size
-    print("The count of unique values in column ", column, " is ", columnCount)
-    if not (1 < columnCount < productCount*0.5):
-        print("Dropping column ", column)
-        df_products_complete.drop(column, 1, inplace=True)
+    distinctCount = df_products_complete[column].unique().size
+    logging.debug("The count of unique values in column %i is %i",column, distinctCount)
+    if (distinctCount == 1):
+        logging.info("Dropping column %s", column)
+        df_products_complete.drop(columns = column, axis = 1, inplace=True)
 
 for column in df_products_complete:
-    print(column)
+    logging.debug(column)
 
  # Import formated data
 #df_products = pd.read_csv('data/allProducts.csv', index_col='UPC')
@@ -53,7 +56,7 @@ testClassifier = tree.DecisionTreeClassifier()
 testClassifier.fit(x_train, y_train)
 testPredictions = testClassifier.predict(x_test)
 
-print("Accuracy from testing", accuracy_score(y_test, testPredictions), "%")
+logging.info("Accuracy from testing %f", accuracy_score(y_test, testPredictions))
 
 # Create new classifier using all the data to train it
 classifier = tree.DecisionTreeClassifier()
@@ -86,4 +89,4 @@ for index, row in df_predictions_test.iterrows():
     if(row['SourcePlanogram'] == row['Planogram']):
         correctCount += 1
 
-print("Accuracy from Source to Results is ", correctCount/totalCount*100)
+logging.info("Accuracy from Source to Results is %f", correctCount/totalCount*100)
